@@ -4,10 +4,11 @@
 import http.server
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 
 import yaml
 
@@ -15,9 +16,42 @@ CONFIG_PATH = Path.home() / ".hermes" / "config.yaml"
 HTML_PATH = Path(__file__).parent / "index.html"
 PORT = int(os.environ.get("PORT", 8899))
 
+
+def find_hermes():
+    """Locate hermes CLI across machines and install layouts."""
+    candidates = []
+
+    env_path = os.environ.get("HERMES_BIN", "").strip()
+    if env_path:
+        candidates.append(Path(env_path).expanduser())
+
+    found = shutil.which("hermes")
+    if found:
+        candidates.append(Path(found))
+
+    candidates.extend([
+        Path.home() / ".local" / "bin" / "hermes",
+        Path("/usr/local/bin/hermes"),
+        Path("/usr/bin/hermes"),
+    ])
+
+    seen = set()
+    for path in candidates:
+        path = path.expanduser().resolve()
+        key = str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+        if path.exists() and os.access(path, os.X_OK):
+            return str(path)
+
+    return None
+
+
 def load_config():
     with open(CONFIG_PATH) as f:
         return yaml.safe_load(f)
+
 
 def get_models():
     """Return all models grouped by provider, with current default marked."""
@@ -26,7 +60,11 @@ def get_models():
     default_model = cfg.get("model", {}).get("default", "")
     default_provider = cfg.get("model", {}).get("provider", "")
 
-    result = {"default_model": default_model, "default_provider": default_provider, "providers": {}}
+    result = {
+        "default_model": default_model,
+        "default_provider": default_provider,
+        "providers": {},
+    }
 
     for pname, pcfg in providers.items():
         models = []
@@ -35,31 +73,89 @@ def get_models():
                 models.append(m)
             elif isinstance(m, dict):
                 models.append(m.get("id", m.get("name", str(m))))
-        result["providers"][pname] = {"name": pcfg.get("name", pname), "base_url": pcfg.get("base_url", ""), "models": models}
+        result["providers"][pname] = {
+            "name": pcfg.get("name", pname),
+            "base_url": pcfg.get("base_url", ""),
+            "models": models,
+        }
 
     return result
 
+
+def get_current_selection():
+    cfg = load_config()
+    model_cfg = cfg.get("model", {})
+    return {
+        "provider": model_cfg.get("provider", ""),
+        "model": model_cfg.get("default", ""),
+    }
+
+
+def get_health():
+    hermes_bin = find_hermes()
+    current = get_current_selection()
+    return {
+        "ok": True,
+        "port": PORT,
+        "config_path": str(CONFIG_PATH),
+        "config_exists": CONFIG_PATH.exists(),
+        "html_path": str(HTML_PATH),
+        "html_exists": HTML_PATH.exists(),
+        "hermes_bin": hermes_bin,
+        "hermes_found": bool(hermes_bin),
+        "current_provider": current["provider"],
+        "current_model": current["model"],
+    }
+
+
 def switch_model(provider, model):
-    """Switch default model + provider via hermes CLI."""
+    """Switch default model + provider via hermes CLI and verify by rereading config."""
     try:
+        hermes_bin = find_hermes()
+        if not hermes_bin:
+            return {
+                "ok": False,
+                "error": "hermes CLI not found. Set HERMES_BIN or ensure `hermes` is in PATH.",
+            }
+
         r1 = subprocess.run(
-            ["/home/cheng/.local/bin/hermes", "config", "set", "model.default", model],
+            [hermes_bin, "config", "set", "model.provider", provider],
             capture_output=True, text=True, timeout=15,
         )
         r2 = subprocess.run(
-            ["/home/cheng/.local/bin/hermes", "config", "set", "model.provider", provider],
+            [hermes_bin, "config", "set", "model.default", model],
             capture_output=True, text=True, timeout=15,
         )
-        if r1.returncode == 0 and r2.returncode == 0:
-            return {"ok": True, "model": model, "provider": provider}
-        else:
-            return {"ok": False, "error": f"set model.default: {r1.stderr.strip()}\nset model.provider: {r2.stderr.strip()}"}
+
+        if r1.returncode != 0 or r2.returncode != 0:
+            return {
+                "ok": False,
+                "error": f"hermes={hermes_bin}\nset model.provider: {r1.stderr.strip()}\nset model.default: {r2.stderr.strip()}"
+            }
+
+        current = get_current_selection()
+        if current["provider"] != provider or current["model"] != model:
+            return {
+                "ok": False,
+                "error": (
+                    "Config verification failed after switch.\n"
+                    f"expected: {provider}/{model}\n"
+                    f"actual: {current['provider']}/{current['model']}"
+                ),
+            }
+
+        return {
+            "ok": True,
+            "model": model,
+            "provider": provider,
+            "hermes_bin": hermes_bin,
+        }
     except Exception as e:
         return {"ok": False, "error": str(e)}
 
+
 class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
-        # Suppress default logging to stderr
         pass
 
     def _send_json(self, data, status=200):
@@ -88,6 +184,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._send_json(get_models())
             except Exception as e:
                 self._send_json({"error": str(e)}, 500)
+        elif parsed.path == "/api/health":
+            try:
+                self._send_json(get_health())
+            except Exception as e:
+                self._send_json({"ok": False, "error": str(e)}, 500)
         else:
             self._send_json({"error": "Not found"}, 404)
 
@@ -118,6 +219,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
+
 def main():
     if not CONFIG_PATH.exists():
         print(f"Config not found: {CONFIG_PATH}", file=sys.stderr)
@@ -130,6 +232,7 @@ def main():
     except KeyboardInterrupt:
         print("\n👋 Shutting down.")
         server.server_close()
+
 
 if __name__ == "__main__":
     main()
