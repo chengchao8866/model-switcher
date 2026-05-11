@@ -6,358 +6,904 @@
 <title>Hermes Model Switcher</title>
 <style>
   :root {
-    --bg: #0d1117;
-    --card: #161b22;
-    --border: #30363d;
-    --text: #c9d1d9;
-    --muted: #8b949e;
-    --accent: #58a6ff;
-    --green: #3fb950;
-    --orange: #d2991d;
-    --red: #f85149;
+    color-scheme: dark;
+    --bg: #090d14;
+    --surface: #101722;
+    --surface-2: #151e2b;
+    --surface-3: #1b2635;
+    --line: #2a3648;
+    --line-strong: #3b4d63;
+    --text: #edf3fb;
+    --muted: #8d9aae;
+    --muted-2: #647184;
+    --accent: #68a6ff;
+    --accent-strong: #2f7cf6;
+    --success: #35d486;
+    --success-bg: rgba(53, 212, 134, 0.13);
+    --danger: #ff6877;
+    --danger-bg: rgba(255, 104, 119, 0.13);
+    --warning: #f3c969;
+    --shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
     --radius: 8px;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+  }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    margin: 0;
     background: var(--bg);
     color: var(--text);
-    min-height: 100vh;
-    padding: 24px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: 0;
   }
-  .container { max-width: 900px; margin: 0 auto; }
+
+  button {
+    font: inherit;
+  }
+
+  .app {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 28px 0 36px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .brand-mark {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid rgba(104, 166, 255, 0.42);
+    border-radius: var(--radius);
+    background: #122033;
+    color: var(--accent);
+    font-size: 19px;
+    font-weight: 800;
+  }
+
   h1 {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 4px;
-    background: linear-gradient(135deg, var(--accent), #a371f7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    margin: 0;
+    font-size: clamp(22px, 3vw, 32px);
+    line-height: 1.08;
+    font-weight: 760;
+    letter-spacing: 0;
   }
-  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
 
-  /* Current model banner */
-  .current {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .current-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .current-model {
-    font-size: 20px;
-    font-weight: 700;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    color: var(--green);
-  }
-  .current-provider {
-    font-size: 13px;
+  .subtitle {
+    margin: 6px 0 0;
     color: var(--muted);
-    background: #1c2128;
-    padding: 2px 10px;
-    border-radius: 12px;
-  }
-  .refresh-btn {
-    background: var(--border);
-    color: var(--text);
-    border: none;
-    padding: 6px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: background .2s;
-  }
-  .refresh-btn:hover { background: #484f58; }
-
-  /* Provider cards */
-  .providers { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: border-color .2s;
-  }
-  .card:hover { border-color: var(--accent); }
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    background: #1c2128;
-  }
-  .card-title {
     font-size: 14px;
-    font-weight: 600;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-  }
-  .card-badge {
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--border);
-    padding: 2px 8px;
-    border-radius: 10px;
   }
 
-  /* Model list */
-  .model-list { padding: 4px 0; }
-  .model-item {
+  .refresh-btn,
+  .switch-btn,
+  .model-option {
+    border: 0;
+    cursor: pointer;
+  }
+
+  .refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--text);
+    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+    white-space: nowrap;
+  }
+
+  .refresh-btn:hover {
+    border-color: var(--line-strong);
+    background: var(--surface-3);
+  }
+
+  .refresh-btn:active,
+  .model-option:active,
+  .switch-btn:active {
+    transform: translateY(1px);
+  }
+
+  .status-strip {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .current-copy {
+    min-width: 0;
+  }
+
+  .eyebrow {
+    margin: 0 0 7px;
+    color: var(--muted-2);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .current-model {
     display: flex;
     align-items: center;
-    padding: 10px 16px;
-    cursor: pointer;
-    transition: background .15s;
-    border-left: 3px solid transparent;
     gap: 10px;
+    min-width: 0;
   }
-  .model-item:hover { background: #1c2128; }
-  .model-item.selected {
-    background: rgba(88, 166, 255, 0.08);
-    border-left-color: var(--accent);
+
+  .current-model code,
+  .selected-model code {
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 15px;
+    font-weight: 700;
   }
-  .model-item.active {
-    background: rgba(63, 185, 80, 0.08);
-    border-left-color: var(--green);
+
+  .provider-pill,
+  .current-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
   }
-  .model-item .dot {
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    flex-shrink: 0;
-    transition: all .2s;
+
+  .provider-pill {
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--muted);
   }
-  .model-item.selected .dot {
-    border-color: var(--accent);
-    background: var(--accent);
+
+  .current-pill {
+    border: 1px solid rgba(53, 212, 134, 0.52);
+    background: var(--success-bg);
+    color: var(--success);
   }
-  .model-item.active .dot {
-    border-color: var(--green);
-    background: var(--green);
-  }
-  .model-name {
+
+  .meta-count {
+    display: flex;
+    gap: 10px;
+    color: var(--muted);
     font-size: 13px;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    flex: 1;
-    word-break: break-all;
+    white-space: nowrap;
   }
-  .model-tag {
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 8px;
-    background: rgba(63, 185, 80, 0.15);
-    color: var(--green);
+
+  .layout {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .selection-panel,
+  .models-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .selection-panel {
+    position: sticky;
+    top: 18px;
+    padding: 16px;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .panel-title h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 760;
+  }
+
+  .selected-card {
+    min-height: 156px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+  }
+
+  .selected-empty {
+    display: grid;
+    min-height: 126px;
+    place-items: center;
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .selected-detail[hidden],
+  .selected-empty[hidden],
+  .switch-btn[hidden] {
     display: none;
   }
-  .model-item.active .model-tag { display: inline; }
 
-  /* Switch button */
-  .actions {
-    margin-top: 24px;
-    display: flex;
-    justify-content: center;
-    gap: 12px;
+  .selected-provider {
+    margin-bottom: 10px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 720;
   }
+
+  .selected-model {
+    display: grid;
+    gap: 8px;
+  }
+
+  .selection-note {
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
   .switch-btn {
-    background: var(--green);
-    color: #000;
-    border: none;
-    padding: 12px 32px;
+    display: inline-flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 14px;
+    padding: 0 16px;
     border-radius: var(--radius);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .2s;
+    background: var(--accent-strong);
+    color: white;
+    font-weight: 760;
+    transition: filter 160ms ease, transform 160ms ease, opacity 160ms ease;
   }
-  .switch-btn:hover { filter: brightness(1.1); }
+
+  .switch-btn:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
   .switch-btn:disabled {
-    opacity: 0.5;
     cursor: not-allowed;
-    filter: none;
+    opacity: 0.55;
   }
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px 24px;
+  .models-panel {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .models-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+    background: #0f1621;
+  }
+
+  .models-heading h2 {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .provider-list {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .provider-group {
+    border: 1px solid var(--line);
     border-radius: var(--radius);
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    z-index: 1000;
-    animation: slideUp 0.3s ease;
-    max-width: 90vw;
-  }
-  .toast.success { background: #1a3a2a; color: var(--green); border: 1px solid var(--green); }
-  .toast.error { background: #3a1a1a; color: var(--red); border: 1px solid var(--red); }
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    background: var(--surface-2);
+    overflow: hidden;
   }
 
-  /* Loading spinner */
+  .provider-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px;
+    border-bottom: 1px solid var(--line);
+    background: #131c29;
+  }
+
+  .provider-name {
+    margin: 0;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 14px;
+    font-weight: 760;
+    overflow-wrap: anywhere;
+  }
+
+  .provider-label {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .model-count {
+    flex: 0 0 auto;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .model-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    min-height: 58px;
+    padding: 11px 12px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: #101823;
+    color: var(--text);
+    text-align: left;
+    transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  }
+
+  .model-option:hover {
+    border-color: var(--line-strong);
+    background: #142031;
+  }
+
+  .model-option.is-selected {
+    border-color: rgba(104, 166, 255, 0.78);
+    background: rgba(47, 124, 246, 0.14);
+    box-shadow: inset 0 0 0 1px rgba(104, 166, 255, 0.28);
+  }
+
+  .model-option.is-current {
+    border-color: rgba(53, 212, 134, 0.38);
+    background: rgba(53, 212, 134, 0.08);
+  }
+
+  .model-option.is-current.is-selected {
+    border-color: rgba(53, 212, 134, 0.76);
+    background: rgba(53, 212, 134, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(53, 212, 134, 0.28);
+  }
+
+  .model-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 650;
+  }
+
+  .model-current-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border: 1px solid rgba(53, 212, 134, 0.55);
+    border-radius: 999px;
+    background: var(--success-bg);
+    color: var(--success);
+    font-size: 12px;
+    font-weight: 760;
+    white-space: nowrap;
+  }
+
+  .loading,
+  .empty-state,
+  .error-state {
+    display: grid;
+    min-height: 260px;
+    place-items: center;
+    padding: 28px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .error-state {
+    color: var(--danger);
+  }
+
   .spinner {
     display: inline-block;
-    width: 16px; height: 16px;
-    border: 2px solid var(--border);
+    width: 18px;
+    height: 18px;
+    margin-right: 9px;
+    border: 2px solid var(--line);
     border-top-color: var(--accent);
     border-radius: 50%;
-    animation: spin .6s linear infinite;
-    margin-right: 6px;
-    vertical-align: middle;
+    vertical-align: -4px;
+    animation: spin 720ms linear infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading { text-align: center; padding: 40px; color: var(--muted); }
+
+  .toast-root {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 50;
+    display: grid;
+    gap: 10px;
+    width: min(390px, calc(100vw - 32px));
+    pointer-events: none;
+  }
+
+  .toast {
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #111927;
+    color: var(--text);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    font-size: 14px;
+    line-height: 1.45;
+    pointer-events: auto;
+    animation: toast-in 180ms ease-out;
+  }
+
+  .toast.success {
+    border-color: rgba(53, 212, 134, 0.48);
+    background: #0f241b;
+    color: #b8f7d5;
+  }
+
+  .toast.error {
+    border-color: rgba(255, 104, 119, 0.48);
+    background: #291218;
+    color: #ffd1d6;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 900px) {
+    .app {
+      width: min(100% - 28px, 720px);
+      padding-top: 18px;
+    }
+
+    .topbar,
+    .status-strip,
+    .models-heading {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .topbar,
+    .models-heading {
+      display: flex;
+    }
+
+    .status-strip,
+    .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .selection-panel {
+      position: static;
+    }
+
+    .meta-count {
+      white-space: normal;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .app {
+      width: calc(100% - 20px);
+      padding-bottom: 22px;
+    }
+
+    .brand {
+      align-items: flex-start;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+    }
+
+    .status-strip,
+    .selection-panel,
+    .provider-list {
+      padding: 12px;
+    }
+
+    .current-model {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .provider-head {
+      flex-direction: column;
+    }
+
+    .models-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .toast-root {
+      right: 10px;
+      bottom: 10px;
+      width: calc(100vw - 20px);
+    }
+  }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>🧠 Hermes Model Switcher</h1>
-  <p class="subtitle">选择一个模型，一键切换 Hermes 默认 AI 模型</p>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">H</div>
+        <div>
+          <h1>Hermes Model Switcher</h1>
+          <p class="subtitle">按 provider 分组选择模型，并切换 Hermes 默认配置。</p>
+        </div>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" type="button">刷新列表</button>
+    </header>
 
-  <div class="current" id="currentBanner">
-    <div>
-      <div class="current-label">当前默认模型</div>
-      <span class="current-model" id="curModel">—</span>
-      <span class="current-provider" id="curProvider">—</span>
+    <section class="status-strip" aria-label="当前默认模型">
+      <div class="current-copy">
+        <p class="eyebrow">Current Default</p>
+        <div class="current-model">
+          <code id="currentModel">加载中...</code>
+          <span class="provider-pill" id="currentProvider">provider</span>
+          <span class="current-pill">当前默认</span>
+        </div>
+      </div>
+      <div class="meta-count" id="modelStats">正在读取配置</div>
+    </section>
+
+    <div class="layout">
+      <aside class="selection-panel" aria-label="切换操作">
+        <div class="panel-title">
+          <h2>选中模型</h2>
+          <span class="provider-pill" id="selectionState">未选择</span>
+        </div>
+        <div class="selected-card">
+          <div class="selected-empty" id="selectedEmpty">点击任意模型后，可在这里执行切换。</div>
+          <div class="selected-detail" id="selectedDetail" hidden>
+            <div class="selected-provider" id="selectedProvider"></div>
+            <div class="selected-model">
+              <code id="selectedModel"></code>
+              <p class="selection-note" id="selectionNote"></p>
+            </div>
+          </div>
+        </div>
+        <button class="switch-btn" id="switchBtn" type="button" hidden>切换到此模型</button>
+      </aside>
+
+      <section class="models-panel" aria-label="模型列表">
+        <div class="models-heading">
+          <h2>模型列表</h2>
+          <span class="provider-pill" id="providerStats">加载中</span>
+        </div>
+        <div class="provider-list" id="providerList">
+          <div class="loading"><span class="spinner"></span>加载中...</div>
+        </div>
+      </section>
     </div>
-    <button class="refresh-btn" onclick="loadModels()">🔄 刷新</button>
-  </div>
+  </main>
 
-  <div id="providerGrid" class="providers">
-    <div class="loading"><span class="spinner"></span>加载中...</div>
-  </div>
-
-  <div class="actions">
-    <button class="switch-btn" id="switchBtn" disabled onclick="doSwitch()">
-      ✅ 一键切换
-    </button>
-  </div>
-</div>
+  <div class="toast-root" id="toastRoot" aria-live="polite" aria-atomic="true"></div>
 
 <script>
-let allData = null;
-let selected = null;
+const state = {
+  data: null,
+  selected: null,
+  switching: false,
+};
+
+const els = {
+  refreshBtn: document.getElementById('refreshBtn'),
+  switchBtn: document.getElementById('switchBtn'),
+  providerList: document.getElementById('providerList'),
+  currentModel: document.getElementById('currentModel'),
+  currentProvider: document.getElementById('currentProvider'),
+  modelStats: document.getElementById('modelStats'),
+  providerStats: document.getElementById('providerStats'),
+  selectionState: document.getElementById('selectionState'),
+  selectedEmpty: document.getElementById('selectedEmpty'),
+  selectedDetail: document.getElementById('selectedDetail'),
+  selectedProvider: document.getElementById('selectedProvider'),
+  selectedModel: document.getElementById('selectedModel'),
+  selectionNote: document.getElementById('selectionNote'),
+  toastRoot: document.getElementById('toastRoot'),
+};
+
+els.refreshBtn.addEventListener('click', loadModels);
+els.switchBtn.addEventListener('click', switchSelectedModel);
+els.providerList.addEventListener('click', (event) => {
+  const option = event.target.closest('.model-option');
+  if (!option) return;
+
+  state.selected = {
+    provider: option.dataset.provider,
+    model: option.dataset.model,
+  };
+
+  renderModels();
+  renderSelection();
+});
 
 async function loadModels() {
-  document.getElementById('providerGrid').innerHTML = '<div class="loading"><span class="spinner"></span>加载中...</div>';
+  renderLoading();
+
   try {
-    const resp = await fetch('/api/models');
-    allData = await resp.json();
+    const response = await fetch('/api/models');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+
+    state.data = normalizeData(data);
+    keepValidSelection();
     render();
-  } catch (e) {
-    document.getElementById('providerGrid').innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">加载失败: ${e.message}</div>`;
+  } catch (error) {
+    state.data = null;
+    renderError(error.message);
+  }
+}
+
+async function switchSelectedModel() {
+  if (!state.selected || state.switching || isSelectedCurrent()) return;
+
+  state.switching = true;
+  renderSelection();
+
+  try {
+    const response = await fetch('/api/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state.selected),
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      throw new Error(result.error || `HTTP ${response.status}`);
+    }
+
+    showToast(`已切换到 ${state.selected.model} @ ${state.selected.provider}`, 'success');
+    await loadModels();
+    state.switching = false;
+    renderSelection();
+  } catch (error) {
+    showToast(`切换失败：${error.message}`, 'error');
+    state.switching = false;
+    renderSelection();
+  }
+}
+
+function normalizeData(data) {
+  return {
+    default_model: data.default_model || '',
+    default_provider: data.default_provider || '',
+    providers: data.providers || {},
+  };
+}
+
+function keepValidSelection() {
+  if (!state.selected || !state.data) return;
+  const provider = state.data.providers[state.selected.provider];
+  if (!provider || !provider.models.includes(state.selected.model)) {
+    state.selected = null;
   }
 }
 
 function render() {
-  const { default_model, default_provider, providers } = allData;
-  document.getElementById('curModel').textContent = default_model || '—';
-  document.getElementById('curProvider').textContent = default_provider ? `@ ${default_provider}` : '—';
+  renderCurrent();
+  renderModels();
+  renderSelection();
+}
 
-  // If no selection, pre-select current default
-  if (!selected) {
-    selected = { provider: default_provider, model: default_model };
+function renderLoading() {
+  els.refreshBtn.disabled = true;
+  els.providerList.innerHTML = '<div class="loading"><span class="spinner"></span>加载中...</div>';
+  els.currentModel.textContent = '加载中...';
+  els.currentProvider.textContent = 'provider';
+  els.modelStats.textContent = '正在读取配置';
+  els.providerStats.textContent = '加载中';
+}
+
+function renderError(message) {
+  els.refreshBtn.disabled = false;
+  els.providerList.innerHTML = `<div class="error-state">加载失败：${escapeHTML(message)}</div>`;
+  els.currentModel.textContent = '读取失败';
+  els.currentProvider.textContent = 'error';
+  els.modelStats.textContent = '请检查服务或配置文件';
+  els.providerStats.textContent = '失败';
+  renderSelection();
+}
+
+function renderCurrent() {
+  const { default_model, default_provider, providers } = state.data;
+  const providerCount = Object.keys(providers).length;
+  const modelCount = countModels(providers);
+
+  els.refreshBtn.disabled = false;
+  els.currentModel.textContent = default_model || '未设置';
+  els.currentProvider.textContent = default_provider || '未设置 provider';
+  els.modelStats.textContent = `${providerCount} providers / ${modelCount} models`;
+  els.providerStats.textContent = `${providerCount} providers`;
+}
+
+function renderModels() {
+  if (!state.data) return;
+
+  const { providers, default_model, default_provider } = state.data;
+  const entries = Object.entries(providers);
+
+  if (entries.length === 0) {
+    els.providerList.innerHTML = '<div class="empty-state">没有在配置中找到 provider。</div>';
+    return;
   }
-  updateSwitchBtn();
 
-  let html = '';
-  for (const [pkey, pinfo] of Object.entries(providers)) {
-    html += `<div class="card">
-      <div class="card-header">
-        <span class="card-title">${esc(pkey)}</span>
-        <span class="card-badge">${pinfo.models.length} 模型</span>
-      </div>
-      <div class="model-list">`;
-    for (const m of pinfo.models) {
-      const isActive = m === default_model && pkey === default_provider;
-      const isSel = selected && selected.provider === pkey && selected.model === m;
-      let cls = 'model-item';
-      if (isActive) cls += ' active';
-      if (isSel) cls += ' selected';
-      html += `<div class="${cls}" data-provider="${esc(pkey)}" data-model="${esc(m)}" onclick="selectModel('${esc(pkey)}','${esc(m)}')">
-        <div class="dot"></div>
-        <span class="model-name">${esc(m)}</span>
-        <span class="model-tag">当前</span>
-      </div>`;
-    }
-    html += '</div></div>';
+  els.providerList.innerHTML = entries.map(([providerKey, providerInfo]) => {
+    const models = Array.isArray(providerInfo.models) ? providerInfo.models : [];
+    const providerLabel = providerInfo.name && providerInfo.name !== providerKey
+      ? `<p class="provider-label">${escapeHTML(providerInfo.name)}</p>`
+      : '';
+
+    return `
+      <article class="provider-group">
+        <header class="provider-head">
+          <div>
+            <h3 class="provider-name">${escapeHTML(providerKey)}</h3>
+            ${providerLabel}
+          </div>
+          <span class="model-count">${models.length} models</span>
+        </header>
+        <div class="models-grid">
+          ${models.map((model) => renderModelOption(providerKey, model, default_provider, default_model)).join('')}
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+function renderModelOption(provider, model, defaultProvider, defaultModel) {
+  const isCurrent = provider === defaultProvider && model === defaultModel;
+  const isSelected = state.selected && state.selected.provider === provider && state.selected.model === model;
+  const classes = [
+    'model-option',
+    isCurrent ? 'is-current' : '',
+    isSelected ? 'is-selected' : '',
+  ].filter(Boolean).join(' ');
+
+  return `
+    <button
+      class="${classes}"
+      type="button"
+      data-provider="${escapeAttr(provider)}"
+      data-model="${escapeAttr(model)}"
+      aria-pressed="${isSelected ? 'true' : 'false'}"
+    >
+      <span class="model-name">${escapeHTML(model)}</span>
+      ${isCurrent ? '<span class="model-current-badge">当前默认</span>' : ''}
+    </button>
+  `;
+}
+
+function renderSelection() {
+  const hasSelection = Boolean(state.selected);
+  const current = hasSelection && isSelectedCurrent();
+
+  els.selectedEmpty.hidden = hasSelection;
+  els.selectedDetail.hidden = !hasSelection;
+  els.switchBtn.hidden = !hasSelection;
+  els.selectionState.textContent = hasSelection ? '已选择' : '未选择';
+
+  if (!hasSelection) {
+    els.switchBtn.disabled = true;
+    els.switchBtn.textContent = '切换到此模型';
+    return;
   }
-  document.getElementById('providerGrid').innerHTML = html;
+
+  els.selectedProvider.textContent = state.selected.provider;
+  els.selectedModel.textContent = state.selected.model;
+  els.selectionNote.textContent = current
+    ? '这是当前默认模型，无需重复切换。'
+    : '将同时更新 model.default 和 model.provider。';
+  els.switchBtn.disabled = state.switching || current;
+  els.switchBtn.textContent = state.switching ? '切换中...' : '切换到此模型';
 }
 
-function selectModel(provider, model) {
-  selected = { provider, model };
-  // Update visual selection
-  document.querySelectorAll('.model-item').forEach(el => {
-    const p = el.dataset.provider;
-    const m = el.dataset.model;
-    el.classList.toggle('selected', p === provider && m === model);
-  });
-  updateSwitchBtn();
+function isSelectedCurrent() {
+  if (!state.data || !state.selected) return false;
+  return state.selected.provider === state.data.default_provider
+    && state.selected.model === state.data.default_model;
 }
 
-function updateSwitchBtn() {
-  const btn = document.getElementById('switchBtn');
-  if (!selected) { btn.disabled = true; return; }
-  const { default_model, default_provider } = allData || {};
-  const isSame = selected.model === default_model && selected.provider === default_provider;
-  btn.disabled = isSame;
-  btn.textContent = isSame ? '✅ 已是当前模型' : '✅ 一键切换';
+function countModels(providers) {
+  return Object.values(providers).reduce((total, providerInfo) => {
+    return total + (Array.isArray(providerInfo.models) ? providerInfo.models.length : 0);
+  }, 0);
 }
 
-async function doSwitch() {
-  if (!selected) return;
-  const btn = document.getElementById('switchBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ 切换中...';
-  try {
-    const resp = await fetch('/api/switch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(selected),
-    });
-    const result = await resp.json();
-    if (result.ok) {
-      toast(`✅ 已切换至 ${selected.model} @ ${selected.provider}`, 'success');
-      // Reload to update display
-      setTimeout(() => loadModels(), 500);
-    } else {
-      toast(`❌ 切换失败: ${result.error}`, 'error');
-      btn.disabled = false;
-      btn.textContent = '✅ 一键切换';
-    }
-  } catch (e) {
-    toast(`❌ 请求失败: ${e.message}`, 'error');
-    btn.disabled = false;
-    btn.textContent = '✅ 一键切换';
-  }
+function showToast(message, type) {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  els.toastRoot.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3600);
 }
 
-function toast(msg, type) {
-  const old = document.querySelector('.toast');
-  if (old) old.remove();
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+function escapeAttr(value) {
+  return escapeHTML(value).replace(/`/g, '&#96;');
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+function escapeHTML(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-// Init
 loadModels();
 </script>
 </body>
