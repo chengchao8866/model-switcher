@@ -43,11 +43,11 @@ def switch_model(provider, model):
     """Switch default model + provider via hermes CLI."""
     try:
         r1 = subprocess.run(
-            ["hermes", "config", "set", "model.default", model],
+            ["/home/cheng/.local/bin/hermes", "config", "set", "model.default", model],
             capture_output=True, text=True, timeout=15,
         )
         r2 = subprocess.run(
-            ["hermes", "config", "set", "model.provider", provider],
+            ["/home/cheng/.local/bin/hermes", "config", "set", "model.provider", provider],
             capture_output=True, text=True, timeout=15,
         )
         if r1.returncode == 0 and r2.returncode == 0:
